@@ -30,7 +30,8 @@ class Usuario(db.Model):
             "nombre": self.nombre,
             "apellido": self.apellido,
             "edad": self.edad,
-            "carrera": self.carrera
+            "carrera": self.carrera,
+            "password": self.password
         }
 
 
