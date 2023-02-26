@@ -91,15 +91,21 @@ class Tipo(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(50), nullable=False)
+    min = db.Column(db.Integer, nullable=False)
+    max = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, nombre, id=None):
+    def __init__(self, nombre, min, max, id=None):
         self.id = id
         self.nombre = nombre
+        self.min = min
+        self.max = max
 
     def to_json(self) -> str:
         return {
             "id": self.id,
-            "nombre": self.nombre
+            "nombre": self.nombre,
+            "min": self.min,
+            "max": self.max
         }
 
 
@@ -107,26 +113,24 @@ class EspacioFisico(db.Model):
     __tablename__ = 'espacios_fisicos'
 
     id = db.Column(db.Integer, primary_key=True)
-    id_facultad = db.Column(db.Integer, db.ForeignKey(
-        'facultades.id'), nullable=False)
-    id_bloque = db.Column(db.Integer, db.ForeignKey(
-        'bloques.id'), nullable=False)
-    id_tipo = db.Column(db.Integer, db.ForeignKey('tipos.id'), nullable=False)
+    facultad = db.Column(db.String, nullable=False)
+    bloque = db.Column(db.String, nullable=False)
+    tipo = db.Column(db.String, nullable=False)
     nombre = db.Column(db.String(50), nullable=False)
     aforo = db.Column(db.Integer, nullable=False)
-    horas_uso = db.Column(db.Time, nullable=False)
-    horas_nueva_reserva = db.Column(db.Time, nullable=False)
-    tiempo_espera = db.Column(db.Time, nullable=False)
+    horas_uso = db.Column(db.DateTime)
+    horas_nueva_reserva = db.Column(db.DateTime)
+    tiempo_espera = db.Column(db.DateTime)
     reservable = db.Column(db.Boolean)
     reservado = db.Column(db.Boolean)
     # tipo = db.relationship("Tipo", backref="tipos",lazy=True)
 
-    def __init__(self, id_facultad, id_bloque, id_tipo, nombre, aforo, horas_uso, horas_nueva_reserva,
-                 tiempo_espera, reservable=True, reservado=False, id=None):
+    def __init__(self, facultad, bloque, tipo, nombre, aforo, horas_uso=None, horas_nueva_reserva=None,
+                 tiempo_espera=None, reservable=True, reservado=False, id=None):
         self.id = id
-        self.id_facultad = id_facultad
-        self.id_bloque = id_bloque
-        self.id_tipo = id_tipo
+        self.facultad = facultad
+        self.bloque = bloque
+        self.tipo = tipo
         self.nombre = nombre
         self.aforo = aforo
         self.horas_uso = horas_uso
@@ -138,9 +142,9 @@ class EspacioFisico(db.Model):
     def to_json(self) -> str:
         return {
             "id": self.id,
-            "id_facultad": self.id_facultad,
-            "id_bloque": self.id_bloque,
-            "id_tipo": self.id_tipo,
+            "facultad": self.facultad,
+            "bloque": self.bloque,
+            "tipo": self.tipo,
             "nombre": self.nombre,
             "aforo": self.aforo,
             "horas_uso": self.horas_uso,
@@ -148,4 +152,35 @@ class EspacioFisico(db.Model):
             "tiempo_espera": self.tiempo_espera,
             "reservable": self.reservable,
             "reservado": self.reservado
+        }
+
+
+class Reserva(db.Model):
+    __tablename__ = 'reservas'
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_usuario = db.Column(db.Integer, nullable=False)
+    id_espacioFisico = db.Column(db.Integer, nullable=False)
+    activa = db.Column(db.Boolean)
+    vencida = db.Column(db.Boolean)
+    fecha_realizada = db.Column(db.DateTime)
+    fecha_vencimiento = db.Column(db.DateTime)
+
+    def __init__(self, id_usuario, id_espacioFisico,activa, vencida, fecha_realizada,fecha_vencimiento,id=None):
+        self.id_usuario = id_usuario
+        self.id_espacioFisico = id_espacioFisico
+        self.activa = activa
+        self.vencida = vencida
+        self.fecha_realizada = fecha_realizada
+        self.fecha_vencimiento = fecha_vencimiento
+
+    def to_json(self) -> str:
+        return {
+            "id": self.id,
+            "id_usuario": self.id_usuario,
+            "id_espacioFisico": self.id_espacioFisico,
+            "activa": self.activa,
+            "vencida": self.vencida,
+            "fecha_realizada": self.fecha_realizada,
+            "fecha_vencimiento": self.fecha_vencimiento,
         }

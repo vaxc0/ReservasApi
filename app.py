@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from utils.PageFormat import toJson
 from models.models import *
+from models.models import db
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -30,7 +31,7 @@ def getAll_add_roles():
                 page = request.args.get("page", 1, type=int)
                 per_page = request.args.get("per-page", 10, type=int)
                 page_rol = Rol.query.paginate(
-                per_page=per_page, page=page, error_out=True)
+                    per_page=per_page, page=page, error_out=True)
                 results = []
 
                 for rol in page_rol.items:
@@ -375,14 +376,11 @@ def getAll_add_espaciosFisicos():
             else:
                 data = request.get_json()
                 new_espacioF = EspacioFisico(
-                    id_facultad=data['id_facultad'],
-                    id_bloque=data['id_bloque'],
-                    id_tipo=data['id_bloque'],
+                    facultad=data['facultad'],
+                    bloque=data['bloque'],
+                    tipo=data['tipo'],
                     nombre=data['nombre'],
                     aforo=data['aforo'],
-                    horas_uso=data['horas_uso'],
-                    horas_nueva_reserva=data['horas_nueva_reserva'],
-                    tiempo_espera=data['tiempo_espera'],
                     reservable=data['reservable'],
                     reservado=data['reservado']
                 )
@@ -405,9 +403,9 @@ def get_upd_del_espacioFisico(id):
 
         elif request.method == 'PUT':
             new_data = request.get_json()
-            espacioF.id_facultad = new_data['id_facultad'],
-            espacioF.id_bloque = new_data['id_bloque'],
-            espacioF.id_tipo = new_data['id_bloque'],
+            espacioF.facultad = new_data['id_facultad'],
+            espacioF.bloque = new_data['bloque'],
+            espacioF.tipo = new_data['tipo'],
             espacioF.nombre = new_data['nombre'],
             espacioF.aforo = new_data['aforo'],
             espacioF.horas_uso = new_data['horas_uso'],
@@ -421,6 +419,87 @@ def get_upd_del_espacioFisico(id):
 
         elif request.method == 'DELETE':
             db.session.delete(espacioF)
+            db.session.commit()
+            return jsonify({'message': "Eliminado Correctamente"})
+
+
+@app.route('/api/reservas/', methods=['GET', 'POST'])
+def getAll_add_reservas():
+    if request.method == 'GET':
+        paginated = request.args.get("paginated", False, type=bool)
+
+        if paginated:
+            page = request.args.get("page", 1, type=int)
+            per_page = request.args.get("per-page", 10, type=int)
+            page_reserva = Reserva.query.paginate(
+                per_page=per_page, page=page, error_out=True)
+            results = []
+
+            for reserva in page_reserva.items:
+                results.append(reserva.to_json())
+
+            return jsonify(toJson.page_format(results, page_reserva))
+        
+        else:
+            filter = request.args.get("filterByUser", False, type=bool)
+            keyFilter = request.args.get("keyFilte", False, type=int)
+            if filter:
+                reservas = Reserva.filter(Reserva.id_usuario == keyFilter).query.all()
+            else:
+                reservas = Reserva.query.all()
+            
+            results = []
+
+            for reserva in reservas:
+                results.append(reserva.to_json())
+
+            return jsonify(results)
+
+    elif request.method == 'POST':
+        try:
+            if not request.is_json:
+                return jsonify({"error": "La carga útil de la solicitud no está en formato JSON"})
+            else:
+                data = request.get_json()
+                new_reserva = Reserva(
+                    id_usuario=data['id_usuario'],
+                    id_espacioFisico=data['id_espacioFisico'],
+                    activa=data['activa'],
+                    vencida=data['vencida'],
+                    fecha_realizada=data['fecha_realizada'],
+                    fecha_vencimiento=data['fecha_vencimiento'],
+                )
+                db.session.add(new_reserva)
+                db.session.commit()
+                return jsonify({"message": "Creado Correctamente", "added": new_reserva.to_json()})
+
+        except Exception as e:
+            return jsonify({'message':  str(e)})
+
+
+@app.route('/api/reservas/<id>', methods=['GET', 'PUT', 'DELETE'])
+def get_upd_del_reservas(id):
+    reserva = Reserva.query.get(id)
+    if not reserva:
+        return jsonify({'message': "Reserva no Encontrada"})
+    else:
+        if request.method == 'GET':
+            return jsonify(reserva.to_json())
+
+        elif request.method == 'PUT':
+            new_data = request.get_json()
+            reserva.id_usuario = new_data['id_usuario'],
+            reserva.id_espacioFisico = new_data['id_espacioFisico'],
+            reserva.activa = new_data['activa'],
+            reserva.vencida = new_data['vencida'],
+            reserva.fecha_realizada = new_data['fecha_realizada'],
+            reserva.fecha_vencimiento = new_data['fecha_vencimiento'],
+            db.session.add(reserva)
+            db.session.commit()
+            return jsonify({"message": "Actualizado Correctamente", "modiffied": reserva.to_json()})
+
+        elif request.method == 'DELETE':
+            db.session.delete(reserva)
             db.session.commit()
             return jsonify({'message': "Eliminado Correctamente"})
 
