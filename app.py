@@ -382,7 +382,10 @@ def getAll_add_espaciosFisicos():
                     nombre=data['nombre'],
                     aforo=data['aforo'],
                     reservable=data['reservable'],
-                    reservado=data['reservado']
+                    reservado=data['reservado'],
+                    horas_uso=data['horas_uso'],
+                    horas_nueva_reserva=data['horas_nueva_reserva'],
+                    tiempo_espera=data['tiempo_espera'],
                 )
                 db.session.add(new_espacioF)
                 db.session.commit()
@@ -403,8 +406,6 @@ def get_upd_del_espacioFisico(id):
 
         elif request.method == 'PUT':
             new_data = request.get_json()
-            espacioF.facultad = new_data['id_facultad'],
-            espacioF.bloque = new_data['bloque'],
             espacioF.tipo = new_data['tipo'],
             espacioF.nombre = new_data['nombre'],
             espacioF.aforo = new_data['aforo'],
@@ -439,15 +440,20 @@ def getAll_add_reservas():
                 results.append(reserva.to_json())
 
             return jsonify(toJson.page_format(results, page_reserva))
-        
+
         else:
-            filter = request.args.get("filterByUser", False, type=bool)
-            keyFilter = request.args.get("keyFilte", False, type=int)
-            if filter:
-                reservas = Reserva.filter(Reserva.id_usuario == keyFilter).query.all()
+            filterByUser = request.args.get("filterByUser", False, type=bool)
+            filterByOper = request.args.get("filterByOper", False, type=bool)
+            keyFilter = request.args.get("keyFilter", False, type=int)
+            if filterByUser:
+                reservas = Reserva.query.filter(
+                    Reserva.id_usuario == keyFilter).all()
+            elif filterByOper:
+                reservas = Reserva.query.filter(
+                    Reserva.id_operario == keyFilter).all()
             else:
                 reservas = Reserva.query.all()
-            
+
             results = []
 
             for reserva in reservas:
@@ -463,11 +469,15 @@ def getAll_add_reservas():
                 data = request.get_json()
                 new_reserva = Reserva(
                     id_usuario=data['id_usuario'],
+                    id_operario=data['id_operario'],
                     id_espacioFisico=data['id_espacioFisico'],
                     activa=data['activa'],
                     vencida=data['vencida'],
                     fecha_realizada=data['fecha_realizada'],
-                    fecha_vencimiento=data['fecha_vencimiento'],
+                    hora_realizada=data['hora_realizada'],
+                    fecha_reservar=data['fecha_reservar'],
+                    hora_reservar=data['hora_reservar'],
+                    hora_finalReservar=data['hora_finalReservar'],
                 )
                 db.session.add(new_reserva)
                 db.session.commit()
@@ -489,11 +499,15 @@ def get_upd_del_reservas(id):
         elif request.method == 'PUT':
             new_data = request.get_json()
             reserva.id_usuario = new_data['id_usuario'],
+            reserva.id_operario=new_data['id_operario'],
             reserva.id_espacioFisico = new_data['id_espacioFisico'],
             reserva.activa = new_data['activa'],
             reserva.vencida = new_data['vencida'],
             reserva.fecha_realizada = new_data['fecha_realizada'],
-            reserva.fecha_vencimiento = new_data['fecha_vencimiento'],
+            reserva.hora_realizada = new_data['hora_realizada'],
+            reserva.fecha_reservar = new_data['fecha_reservar'],
+            reserva.hora_reservar = new_data['hora_reservar'],
+            reserva.hora_finalReservar = new_data['hora_finalReservar'],
             db.session.add(reserva)
             db.session.commit()
             return jsonify({"message": "Actualizado Correctamente", "modiffied": reserva.to_json()})

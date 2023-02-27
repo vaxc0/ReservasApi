@@ -118,15 +118,15 @@ class EspacioFisico(db.Model):
     tipo = db.Column(db.String, nullable=False)
     nombre = db.Column(db.String(50), nullable=False)
     aforo = db.Column(db.Integer, nullable=False)
-    horas_uso = db.Column(db.DateTime)
-    horas_nueva_reserva = db.Column(db.DateTime)
-    tiempo_espera = db.Column(db.DateTime)
-    reservable = db.Column(db.Boolean)
-    reservado = db.Column(db.Boolean)
+    horas_uso = db.Column(db.String)
+    horas_nueva_reserva = db.Column(db.String)
+    tiempo_espera = db.Column(db.String)
+    reservable = db.Column(db.Integer)
+    reservado = db.Column(db.Integer)
     # tipo = db.relationship("Tipo", backref="tipos",lazy=True)
 
     def __init__(self, facultad, bloque, tipo, nombre, aforo, horas_uso=None, horas_nueva_reserva=None,
-                 tiempo_espera=None, reservable=True, reservado=False, id=None):
+                 tiempo_espera=None, reservable=1, reservado=0, id=None):
         self.id = id
         self.facultad = facultad
         self.bloque = bloque
@@ -159,28 +159,42 @@ class Reserva(db.Model):
     __tablename__ = 'reservas'
 
     id = db.Column(db.Integer, primary_key=True)
+    id_operario = db.Column(db.Integer)
     id_usuario = db.Column(db.Integer, nullable=False)
     id_espacioFisico = db.Column(db.Integer, nullable=False)
-    activa = db.Column(db.Boolean)
-    vencida = db.Column(db.Boolean)
-    fecha_realizada = db.Column(db.DateTime)
-    fecha_vencimiento = db.Column(db.DateTime)
+    activa = db.Column(db.Integer)
+    vencida = db.Column(db.Integer)
+    fecha_realizada = db.Column(db.String)
+    hora_realizada = db.Column(db.String)
+    fecha_reservar = db.Column(db.String)
+    hora_reservar = db.Column(db.String)
+    hora_finalReservar = db.Column(db.String)
 
-    def __init__(self, id_usuario, id_espacioFisico,activa, vencida, fecha_realizada,fecha_vencimiento,id=None):
+    def __init__(self, id_usuario, id_operario, id_espacioFisico, activa, vencida, fecha_realizada, hora_realizada, fecha_reservar, hora_reservar, hora_finalReservar, id=None):
+        self.id = id
+        self.id_operario = id_operario
         self.id_usuario = id_usuario
         self.id_espacioFisico = id_espacioFisico
         self.activa = activa
         self.vencida = vencida
         self.fecha_realizada = fecha_realizada
-        self.fecha_vencimiento = fecha_vencimiento
+        self.hora_realizada = hora_realizada
+        self.fecha_reservar = fecha_reservar
+        self.hora_reservar = hora_reservar
+        self.hora_finalReservar = hora_finalReservar
 
     def to_json(self) -> str:
         return {
             "id": self.id,
             "id_usuario": self.id_usuario,
+            "id_operario":self.id_operario,
             "id_espacioFisico": self.id_espacioFisico,
             "activa": self.activa,
             "vencida": self.vencida,
             "fecha_realizada": self.fecha_realizada,
-            "fecha_vencimiento": self.fecha_vencimiento,
+            "hora_realizada": self.hora_realizada,
+            "fecha_reservar": self.fecha_reservar,
+            "hora_reservar": self.hora_reservar,
+            "hora_finalReservar": self.hora_finalReservar,
+
         }
