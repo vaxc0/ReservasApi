@@ -361,7 +361,13 @@ def getAll_add_espaciosFisicos():
 
             return jsonify(toJson.page_format(results, page_espacioF))
         else:
-            espaciosFisicos = EspacioFisico.query.all()
+            filterByRegla = request.args.get("filterByRegla", False, type=str)
+            if filterByRegla:
+                espaciosFisicos = EspacioFisico.query.filter(
+                    EspacioFisico.id_regla == filterByRegla).all()
+            else:
+                espaciosFisicos = EspacioFisico.query.all()
+
             results = []
 
             for espacioF in espaciosFisicos:
@@ -383,9 +389,6 @@ def getAll_add_espaciosFisicos():
                     aforo=data['aforo'],
                     reservable=data['reservable'],
                     reservado=data['reservado'],
-                    horas_uso=data['horas_uso'],
-                    horas_nueva_reserva=data['horas_nueva_reserva'],
-                    tiempo_espera=data['tiempo_espera'],
                 )
                 db.session.add(new_espacioF)
                 db.session.commit()
@@ -406,12 +409,10 @@ def get_upd_del_espacioFisico(id):
 
         elif request.method == 'PUT':
             new_data = request.get_json()
+            espacioF.id_regla = new_data['id_regla'],
             espacioF.tipo = new_data['tipo'],
             espacioF.nombre = new_data['nombre'],
             espacioF.aforo = new_data['aforo'],
-            espacioF.horas_uso = new_data['horas_uso'],
-            espacioF.horas_nueva_reserva = new_data['horas_nueva_reserva'],
-            espacioF.tiempo_espera = new_data['tiempo_espera'],
             espacioF.reservable = new_data['reservable'],
             espacioF.reservado = new_data['reservado']
             db.session.add(espacioF)
@@ -420,6 +421,74 @@ def get_upd_del_espacioFisico(id):
 
         elif request.method == 'DELETE':
             db.session.delete(espacioF)
+            db.session.commit()
+            return jsonify({'message': "Eliminado Correctamente"})
+
+
+@app.route('/api/reglas/', methods=['GET', 'POST'])
+def getAll_add_reglas():
+    if request.method == 'GET':
+        paginated = request.args.get("paginated", False, type=bool)
+
+        if paginated:
+            page = request.args.get("page", 1, type=int)
+            per_page = request.args.get("per-page", 10, type=int)
+            page_regla = Regla.query.paginate(
+                per_page=per_page, page=page, error_out=True)
+            results = []
+
+            for regla in page_regla.items:
+                results.append(regla.to_json())
+
+            return jsonify(toJson.page_format(results, page_regla))
+        else:
+            reglas = Regla.query.all()
+            results = []
+
+            for regla in reglas:
+                results.append(regla.to_json())
+
+            return jsonify(results)
+
+    elif request.method == 'POST':
+        try:
+            if not request.is_json:
+                return jsonify({"error": "La carga útil de la solicitud no está en formato JSON"})
+            else:
+                data = request.get_json()
+                new_regla = Regla(
+                    horas_uso=data['horas_uso'],
+                    horas_nueva_Reserva=data['horas_nueva_reserva'],
+                    tiempo_espera=data['tiempo_espera'],
+                )
+                db.session.add(new_regla)
+                db.session.commit()
+                return jsonify({"message": "Creado Correctamente", "added": new_regla.to_json()})
+
+        except Exception as e:
+            return jsonify({'message':  str(e)})
+
+
+@app.route('/api/reglas/<id>', methods=['GET', 'PUT', 'DELETE'])
+def get_upd_del_regla(id):
+    regla = Regla.query.get(id)
+    if not regla:
+        return jsonify({'message': "Regla no Encontrada"})
+    else:
+        if request.method == 'GET':
+            return jsonify(regla.to_json())
+
+        elif request.method == 'PUT':
+            new_data = request.get_json()
+            regla.horas_uso = new_data['horas_uso'],
+            regla.horas_nueva_Reserva = new_data['horas_nueva_reserva'],
+            regla.tiempo_espera = new_data['tiempo_espera'],
+            db.session.add(regla)
+            db.session.commit()
+            return jsonify({"message": "Actualizado Correctamente", "modiffied": regla.to_json()})
+
+        elif request.method == 'DELETE':
+            db.session.delete(regla)
             db.session.commit()
             return jsonify({'message': "Eliminado Correctamente"})
 
@@ -499,7 +568,7 @@ def get_upd_del_reservas(id):
         elif request.method == 'PUT':
             new_data = request.get_json()
             reserva.id_usuario = new_data['id_usuario'],
-            reserva.id_operario=new_data['id_operario'],
+            reserva.id_operario = new_data['id_operario'],
             reserva.id_espacioFisico = new_data['id_espacioFisico'],
             reserva.activa = new_data['activa'],
             reserva.vencida = new_data['vencida'],

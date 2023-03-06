@@ -113,29 +113,23 @@ class EspacioFisico(db.Model):
     __tablename__ = 'espacios_fisicos'
 
     id = db.Column(db.Integer, primary_key=True)
+    id_regla = db.Column(db.Integer, db.ForeignKey('reglas.id'))
     facultad = db.Column(db.String, nullable=False)
     bloque = db.Column(db.String, nullable=False)
     tipo = db.Column(db.String, nullable=False)
     nombre = db.Column(db.String(50), nullable=False)
-    aforo = db.Column(db.Integer, nullable=False)
-    horas_uso = db.Column(db.String)
-    horas_nueva_reserva = db.Column(db.String)
-    tiempo_espera = db.Column(db.String)
+    aforo = db.Column(db.Integer)
     reservable = db.Column(db.Integer)
     reservado = db.Column(db.Integer)
     # tipo = db.relationship("Tipo", backref="tipos",lazy=True)
 
-    def __init__(self, facultad, bloque, tipo, nombre, aforo, horas_uso=None, horas_nueva_reserva=None,
-                 tiempo_espera=None, reservable=1, reservado=0, id=None):
+    def __init__(self, facultad, bloque, tipo, nombre, aforo,reservable, reservado, id=None):
         self.id = id
         self.facultad = facultad
         self.bloque = bloque
         self.tipo = tipo
         self.nombre = nombre
         self.aforo = aforo
-        self.horas_uso = horas_uso
-        self.horas_nueva_reserva = horas_nueva_reserva
-        self.tiempo_espera = tiempo_espera
         self.reservable = reservable
         self.reservado = reservado
 
@@ -146,12 +140,32 @@ class EspacioFisico(db.Model):
             "bloque": self.bloque,
             "tipo": self.tipo,
             "nombre": self.nombre,
-            "aforo": self.aforo,
-            "horas_uso": self.horas_uso,
-            "horas_nueva_reserva": self.horas_nueva_reserva,
-            "tiempo_espera": self.tiempo_espera,
+            "aforo":self.aforo,
             "reservable": self.reservable,
             "reservado": self.reservado
+        }
+
+
+class Regla(db.Model):
+    __tablename__ = 'reglas'
+
+    id = db.Column(db.Integer, primary_key=True)
+    horas_uso = db.Column(db.String)
+    horas_nueva_reserva = db.Column(db.String)
+    tiempo_espera = db.Column(db.String)
+
+    def __init__(self, horas_uso, horas_nueva_Reserva, tiempo_espera, id=None) -> None:
+        self.id = id
+        self.horas_uso = horas_uso
+        self.horas_nueva_reserva = horas_nueva_Reserva
+        self.tiempo_espera = tiempo_espera
+
+    def to_json(self) -> str:
+        return {
+            "id": self.id,
+            "horas_uso": self.horas_uso,
+            "horas_nueva_reserva": self.horas_nueva_reserva,
+            "tiempo_espera": self.tiempo_espera
         }
 
 
@@ -187,7 +201,7 @@ class Reserva(db.Model):
         return {
             "id": self.id,
             "id_usuario": self.id_usuario,
-            "id_operario":self.id_operario,
+            "id_operario": self.id_operario,
             "id_espacioFisico": self.id_espacioFisico,
             "activa": self.activa,
             "vencida": self.vencida,
@@ -196,5 +210,4 @@ class Reserva(db.Model):
             "fecha_reservar": self.fecha_reservar,
             "hora_reservar": self.hora_reservar,
             "hora_finalReservar": self.hora_finalReservar,
-
         }
