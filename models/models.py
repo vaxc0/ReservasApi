@@ -123,8 +123,9 @@ class EspacioFisico(db.Model):
     reservado = db.Column(db.Integer)
     # tipo = db.relationship("Tipo", backref="tipos",lazy=True)
 
-    def __init__(self, facultad, bloque, tipo, nombre, aforo,reservable, reservado, id=None):
+    def __init__(self, facultad, bloque, tipo, nombre, aforo, reservable, reservado, id=None, id_regla=None):
         self.id = id
+        self.id_regla = id_regla
         self.facultad = facultad
         self.bloque = bloque
         self.tipo = tipo
@@ -136,11 +137,12 @@ class EspacioFisico(db.Model):
     def to_json(self) -> str:
         return {
             "id": self.id,
+            "id_regla": self.id_regla,
             "facultad": self.facultad,
             "bloque": self.bloque,
             "tipo": self.tipo,
             "nombre": self.nombre,
-            "aforo":self.aforo,
+            "aforo": self.aforo,
             "reservable": self.reservable,
             "reservado": self.reservado
         }
@@ -150,9 +152,9 @@ class Regla(db.Model):
     __tablename__ = 'reglas'
 
     id = db.Column(db.Integer, primary_key=True)
-    horas_uso = db.Column(db.String)
-    horas_nueva_reserva = db.Column(db.String)
-    tiempo_espera = db.Column(db.String)
+    horas_uso = db.Column(db.Integer)
+    horas_nueva_reserva = db.Column(db.Integer)
+    tiempo_espera = db.Column(db.Integer)
 
     def __init__(self, horas_uso, horas_nueva_Reserva, tiempo_espera, id=None) -> None:
         self.id = id
@@ -178,21 +180,19 @@ class Reserva(db.Model):
     id_espacioFisico = db.Column(db.Integer, nullable=False)
     activa = db.Column(db.Integer)
     vencida = db.Column(db.Integer)
-    fecha_realizada = db.Column(db.String)
-    hora_realizada = db.Column(db.String)
-    fecha_reservar = db.Column(db.String)
-    hora_reservar = db.Column(db.String)
-    hora_finalReservar = db.Column(db.String)
+    fechaHora_realizada = db.Column(db.DateTime)
+    fecha_reservar = db.Column(db.DateTime)
+    hora_reservar = db.Column(db.DateTime)
+    hora_finalReservar = db.Column(db.DateTime)
 
-    def __init__(self, id_usuario, id_operario, id_espacioFisico, activa, vencida, fecha_realizada, hora_realizada, fecha_reservar, hora_reservar, hora_finalReservar, id=None):
+    def __init__(self, id_usuario, id_operario, id_espacioFisico, activa, vencida, fechaHora_realizada, fecha_reservar, hora_reservar, hora_finalReservar, id=None):
         self.id = id
         self.id_operario = id_operario
         self.id_usuario = id_usuario
         self.id_espacioFisico = id_espacioFisico
         self.activa = activa
         self.vencida = vencida
-        self.fecha_realizada = fecha_realizada
-        self.hora_realizada = hora_realizada
+        self.fechaHora_realizada = fechaHora_realizada
         self.fecha_reservar = fecha_reservar
         self.hora_reservar = hora_reservar
         self.hora_finalReservar = hora_finalReservar
@@ -205,8 +205,7 @@ class Reserva(db.Model):
             "id_espacioFisico": self.id_espacioFisico,
             "activa": self.activa,
             "vencida": self.vencida,
-            "fecha_realizada": self.fecha_realizada,
-            "hora_realizada": self.hora_realizada,
+            "fechaHora_realizada": self.fechaHora_realizada,
             "fecha_reservar": self.fecha_reservar,
             "hora_reservar": self.hora_reservar,
             "hora_finalReservar": self.hora_finalReservar,
